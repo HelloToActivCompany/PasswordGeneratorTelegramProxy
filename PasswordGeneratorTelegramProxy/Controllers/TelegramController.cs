@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Web.Http;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Telegram.Bot.Types;
 using System.ServiceModel;
 using System.Configuration;
