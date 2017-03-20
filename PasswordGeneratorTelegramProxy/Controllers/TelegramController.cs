@@ -12,7 +12,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
         [HttpPost]
         public void GetPassword([FromBody]Update update)
         {
-            var token = ConfigurationManager.AppSettings["TelegramBotToken"];
+            var token = (string)ConfigurationManager.AppSettings["TelegramBotToken"];
             var bot = new Telegram.Bot.TelegramBotClient(token);
 
             if (!String.IsNullOrWhiteSpace(update.Message.Text))
@@ -36,7 +36,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
 
                 var factory = new ChannelFactory<IPasswordGeneratorService>(
                     binding, 
-                    new EndpointAddress(ConfigurationManager.AppSettings["PasswordGeneratorServiceUrl"]));
+                    new EndpointAddress((string)ConfigurationManager.AppSettings["PasswordGeneratorServiceUrl"]));
 
                 var passwordGeneratorService = factory.CreateChannel();
 
