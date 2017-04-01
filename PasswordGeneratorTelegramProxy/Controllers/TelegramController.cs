@@ -3,6 +3,9 @@ using System.Web.Http;
 using Telegram.Bot.Types;
 using System.ServiceModel;
 using System.Configuration;
+using System.Net;
+using System.Collections.Specialized;
+using System.Text;
 
 namespace PasswordGeneratorTelegramProxy.Controllers
 {
@@ -32,17 +35,35 @@ namespace PasswordGeneratorTelegramProxy.Controllers
                 var key = param[0];
                 var source = param[1];
 
-                var binding = new BasicHttpBinding(BasicHttpSecurityMode.None);
+                //var binding = new BasicHttpBinding(BasicHttpSecurityMode.None);
 
-                var factory = new ChannelFactory<IPasswordGeneratorService>(
-                    binding, 
-                    new EndpointAddress(ConfigurationManager.AppSettings["PasswordGeneratorServiceUrl"]));
+                //var factory = new ChannelFactory<IPasswordGeneratorService>(
+                //    binding, 
+                //    new EndpointAddress(ConfigurationManager.AppSettings["PasswordGeneratorServiceUrl"]));
 
-                var passwordGeneratorService = factory.CreateChannel();
+                //var passwordGeneratorService = factory.CreateChannel();
 
-                var password = passwordGeneratorService.Generate(key, source, true, true, true, true, 12);
+                //var password = passwordGeneratorService.Generate(key, source, true, true, true, true, 12);
+
+                var password = PostToAggregationService(key, source);
 
                 bot.SendTextMessageAsync(update.Message.Chat.Id, password);
+            }
+        }
+
+        private string PostToAggregationService(string key, string value)
+        {
+            var url = ConfigurationManager.AppSettings["AggregatorUrl"];
+
+            using (var webClient = new WebClient())
+            {
+                var pars = new NameValueCollection();
+                pars.Add("key", key);
+                pars.Add("value", value);
+
+                var response = webClient.UploadValues(url, pars);
+
+                return Encoding.UTF8.GetString(response);
             }
         }
     }
