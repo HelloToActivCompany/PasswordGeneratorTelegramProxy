@@ -55,6 +55,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
         {
             var url = ConfigurationManager.AppSettings["AggregatorUrl"];
 
+            string textResponse = string.Empty;
             using (var webClient = new WebClient())
             {
                 var pars = new NameValueCollection();
@@ -62,9 +63,10 @@ namespace PasswordGeneratorTelegramProxy.Controllers
                 pars.Add("value", value);
 
                 var response = webClient.UploadValues(url, pars);
-
-                return Encoding.ASCII.GetString(response);
+                textResponse = Encoding.UTF8.GetString(response);                
             }
+
+            return @textResponse;
         }
     }
 }
