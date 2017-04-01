@@ -63,7 +63,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
 
                 var response = webClient.UploadValues(url, pars);
 
-                return Encoding.UTF8.GetString(response);
+                return Encoding.ASCII.GetString(response);
             }
         }
     }
