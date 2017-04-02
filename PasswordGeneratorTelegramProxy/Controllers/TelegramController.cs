@@ -6,6 +6,7 @@ using System.Configuration;
 using System.Net;
 using System.Collections.Specialized;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace PasswordGeneratorTelegramProxy.Controllers
 {
@@ -55,7 +56,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
         {
             var url = ConfigurationManager.AppSettings["AggregatorUrl"];
 
-            string textResponse = string.Empty;
+            string jsonResponse = string.Empty;
             using (var webClient = new WebClient())
             {
                 var pars = new NameValueCollection();
@@ -63,10 +64,14 @@ namespace PasswordGeneratorTelegramProxy.Controllers
                 pars.Add("value", value);
 
                 var response = webClient.UploadValues(url, pars);
-                textResponse = Encoding.UTF8.GetString(response);                
-            }
 
-            return @textResponse;
+
+
+                jsonResponse = Encoding.UTF8.GetString(response);
+                string password = JsonConvert.DeserializeObject<string>(jsonResponse);
+
+                return password;
+            }
         }
     }
 }
