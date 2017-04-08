@@ -7,6 +7,7 @@ using System.Net;
 using System.Collections.Specialized;
 using System.Text;
 using Newtonsoft.Json;
+using System.Web.Http.Results;
 
 namespace PasswordGeneratorTelegramProxy.Controllers
 {
@@ -36,16 +37,6 @@ namespace PasswordGeneratorTelegramProxy.Controllers
                 var key = param[0];
                 var source = param[1];
 
-                //var binding = new BasicHttpBinding(BasicHttpSecurityMode.None);
-
-                //var factory = new ChannelFactory<IPasswordGeneratorService>(
-                //    binding, 
-                //    new EndpointAddress(ConfigurationManager.AppSettings["PasswordGeneratorServiceUrl"]));
-
-                //var passwordGeneratorService = factory.CreateChannel();
-
-                //var password = passwordGeneratorService.Generate(key, source, true, true, true, true, 12);
-
                 var password = PostToAggregationService(key, source);
 
                 bot.SendTextMessageAsync(update.Message.Chat.Id, password);
@@ -65,13 +56,17 @@ namespace PasswordGeneratorTelegramProxy.Controllers
 
                 var response = webClient.UploadValues(url, pars);
 
-
-
                 jsonResponse = Encoding.UTF8.GetString(response);
                 string password = JsonConvert.DeserializeObject<string>(jsonResponse);
 
                 return password;
             }
+        }
+
+        [HttpGet]
+        public OkResult Heartbeat()
+        {
+            return Ok();
         }
     }
 }
