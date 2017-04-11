@@ -18,10 +18,10 @@ namespace PasswordGeneratorTelegramProxy.Controllers
         public static HubConnection HubConnection { get; set; }
         public static IHubProxy PasswordGenerator { get; set; }
 
-        TelegramController()
-        {
+        //TelegramController()
+        //{
             
-        }
+        //}
 
         [HttpPost]
         public void GetPassword([FromBody]Update update)
@@ -30,7 +30,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
             var bot = new Telegram.Bot.TelegramBotClient(token);
 
             HubConnection = new HubConnection("http://passwordgeneratorfacade.azurewebsites.net/");
-            var PasswordGenerator = HubConnection.CreateHubProxy("PasswordHub");
+            PasswordGenerator = HubConnection.CreateHubProxy("PasswordHub");
             PasswordGenerator.On<string>("passwordReady", (password) => { bot.SendTextMessageAsync(update.Message.Chat.Id, password); });
             //ServicePointManager.DefaultConnectionLimit = 10;
             HubConnection.Start().Wait();
@@ -58,7 +58,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
                     Key = key,
                     Value = source
                 });
-                WebApiApplication.PasswordGenerator.Invoke("Generate", requestData).Wait();
+                PasswordGenerator.Invoke("Generate", requestData);
                 //bot.SendTextMessageAsync(update.Message.Chat.Id, password);
             }
         }
