@@ -4,12 +4,14 @@ using System.Web.Optimization;
 using System.Web.Routing;
 using System.Collections.Concurrent;
 using PasswordGeneratorTelegramProxy.Models;
+using System.Configuration;
 
 namespace PasswordGeneratorTelegramProxy
 {
     public class WebApiApplication : System.Web.HttpApplication
     {
-        public static ConcurrentDictionary<long, string> UserIdConnectionIdMap { get; set; }
+        public static string BotToken { get; set; }
+        public static string PasswordGeneratorUrl { get; set; }
         public static ConcurrentDictionary<long, UserConnection> UserIdConnectionMap { get; set; }
 
         protected void Application_Start()
@@ -20,7 +22,9 @@ namespace PasswordGeneratorTelegramProxy
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
-            UserIdConnectionIdMap = new ConcurrentDictionary<long, string>();
+            BotToken = ConfigurationManager.AppSettings["TelegramBotToken"];
+            PasswordGeneratorUrl = ConfigurationManager.AppSettings["PasswordGenerator"];
+
             UserIdConnectionMap = new ConcurrentDictionary<long, UserConnection>();
         }
     }

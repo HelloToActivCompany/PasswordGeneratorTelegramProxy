@@ -19,8 +19,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
         [HttpPost]
         public void GetPassword([FromBody]Update update)
         {
-            var token = ConfigurationManager.AppSettings["TelegramBotToken"];
-            var bot = new Telegram.Bot.TelegramBotClient(token);
+            var bot = new Telegram.Bot.TelegramBotClient(WebApiApplication.BotToken);
 
             long userId = update.Message.Chat.Id;
 
@@ -29,7 +28,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
 
             if (!connectionExist)
             {
-                HubConnection HubConnection = new HubConnection("http://passwordgeneratorfacade.azurewebsites.net/");
+                HubConnection HubConnection = new HubConnection(WebApiApplication.PasswordGeneratorUrl);
                 userConnection = new UserConnection
                 {
                     HubConnection = HubConnection,
@@ -38,8 +37,7 @@ namespace PasswordGeneratorTelegramProxy.Controllers
 
                 userConnection.PasswordGenerator.On<string>("passwordReady", password => bot.SendTextMessageAsync(userId, password));
                 HubConnection.Start().Wait();
-
-                WebApiApplication.UserIdConnectionIdMap.TryAdd(userId, userConnection.HubConnection.ConnectionId);
+                
                 WebApiApplication.UserIdConnectionMap.TryAdd(userId, userConnection);
             }
 
