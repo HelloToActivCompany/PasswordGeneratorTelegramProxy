@@ -9,7 +9,7 @@ using System.Configuration;
 namespace PasswordGeneratorTelegramProxy
 {
     public class WebApiApplication : System.Web.HttpApplication
-    {
+    {      
         public static string BotToken { get; set; }
         public static string PasswordGeneratorUrl { get; set; }
         public static ConcurrentDictionary<long, UserConnection> UserIdConnectionMap { get; set; }
