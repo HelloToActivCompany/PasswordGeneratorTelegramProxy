@@ -6,6 +6,7 @@ using System.Web.Http.Results;
 using Microsoft.AspNet.SignalR.Client;
 using PasswordGeneratorTelegramProxy.Models;
 using Microsoft.AspNet.SignalR.Client.Transports;
+using System.Threading.Tasks;
 
 namespace PasswordGeneratorTelegramProxy.Controllers
 {
@@ -15,25 +16,36 @@ namespace PasswordGeneratorTelegramProxy.Controllers
         [HttpPost]
         public void GetPassword([FromBody]Update update)
         {
-            var bot = new Telegram.Bot.TelegramBotClient(WebApiApplication.BotToken);
+            var bot = WebApiApplication.BotClient;
             long userId = update.Message.Chat.Id;
 
-            UserConnection userConnection;
-            bool connectionExist = WebApiApplication.UserIdConnectionMap.TryGetValue(userId, out userConnection);
+            HubConnection userConnection;
+            IHubProxy passwordGeneratorProxy = WebApiApplication.PasswordGeneratorProxy;
+
+            bool connectionExist = WebApiApplication.Cache.TryGet(userId, out userConnection);
+
+            Task startConnectionTask = null;
 
             if (!connectionExist)
             {
-                HubConnection HubConnection = new HubConnection(WebApiApplication.PasswordGeneratorUrl);
-                userConnection = new UserConnection
+                userConnection = new HubConnection(WebApiApplication.PasswordGeneratorUrl);
+
+                lock (WebApiApplication.Sync)
                 {
-                    HubConnection = HubConnection,
-                    PasswordGenerator = HubConnection.CreateHubProxy("PasswordHub")
-                };
+                    if (WebApiApplication.PasswordGeneratorProxy != null)
+                        passwordGeneratorProxy = WebApiApplication.PasswordGeneratorProxy;
+                    else
+                    {
+                        WebApiApplication.PasswordGeneratorProxy = userConnection.CreateHubProxy("PasswordHub");
+                        passwordGeneratorProxy = WebApiApplication.PasswordGeneratorProxy;
+                    }
+                }
 
-                userConnection.PasswordGenerator.On<string>("passwordReady", password => bot.SendTextMessageAsync(userId, password));
-                HubConnection.Start(new WebSocketTransport()).Wait();
+                passwordGeneratorProxy.On<string>("passwordReady", password => bot.SendTextMessageAsync(userId, password));                
 
-                WebApiApplication.UserIdConnectionMap.TryAdd(userId, userConnection);
+                startConnectionTask = userConnection.Start();
+
+                WebApiApplication.Cache.Add(userId, userConnection);
             }
 
             if (!String.IsNullOrWhiteSpace(update.Message.Text))
@@ -58,8 +70,11 @@ namespace PasswordGeneratorTelegramProxy.Controllers
                     Key = key,
                     Value = source
                 });
-                                
-                userConnection.PasswordGenerator.Invoke("Generate", requestData);
+
+                if (!connectionExist)
+                    startConnectionTask.Wait();
+
+                passwordGeneratorProxy.Invoke("Generate", requestData);
             }
         }
 
