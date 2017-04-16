@@ -1,40 +1,41 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using Microsoft.AspNet.SignalR.Client;
-using System.Threading.Tasks;
 using System.Threading;
 using System.Linq;
+using PasswordGeneratorTelegramProxy.Models.Configuration;
 
 namespace PasswordGeneratorTelegramProxy.Models
 {
     public class Cache : ICache
     {
         private Timer _timer;
-        private ConcurrentDictionary<long, DictionaryItem<HubConnection>> _internalMap;
+        private ConcurrentDictionary<long, DictionaryItem<Tuple<HubConnection, IHubProxy>>> _internalMap;
 
         private TimeSpan _lifeTime;
         private ITimeManager _timeManager;
         private int _sizeLimit;
         private int _removePersentage;
 
-        public Cache(TimeSpan itemLifeTime, int sizeLimit, int removePersentage, int checkPeriod, ITimeManager timeManager)
+        public Cache(IGetCacheSettings cacheManager, ITimeManager timeManager)
         {
-            _internalMap = new ConcurrentDictionary<long, DictionaryItem<HubConnection>>();
+            var cacheSettings = cacheManager.GetCacheSettings();
 
-            _timer = new Timer((n) => Collect(), null, 1000, checkPeriod);
+            _internalMap = new ConcurrentDictionary<long, DictionaryItem<Tuple<HubConnection, IHubProxy>>>();
 
-            _lifeTime = itemLifeTime;
+            _timer = new Timer((n) => Collect(), null, cacheSettings.CheckPeriod, cacheSettings.CheckPeriod);
+            _lifeTime = new TimeSpan(0, 0, 0, 0, cacheSettings.ItemLifeTimeMilliseconds);
             _timeManager = timeManager;
-            _sizeLimit = sizeLimit;
-            _removePersentage = removePersentage;
+            _sizeLimit = cacheSettings.SizeLimit;
+            _removePersentage = cacheSettings.RemovePersentage;
         }
 
-        public void Add(long key, HubConnection value)
+        public void Add(long key, HubConnection connection, IHubProxy proxy)
         {      
             _internalMap.AddOrUpdate(
                 key, 
-                new DictionaryItem<HubConnection>(value, _lifeTime, _timeManager), 
-                (currentKey, oldValue) => new DictionaryItem<HubConnection>(value, _lifeTime, _timeManager));
+                new DictionaryItem<Tuple<HubConnection, IHubProxy>>(new Tuple<HubConnection, IHubProxy>(connection, proxy), _lifeTime, _timeManager), 
+                (currentKey, oldValue) => new DictionaryItem<Tuple<HubConnection, IHubProxy>>(new Tuple<HubConnection, IHubProxy>(connection, proxy), _lifeTime, _timeManager));
 
             var size = _internalMap.Count;
             if (size > _sizeLimit)
@@ -47,20 +48,21 @@ namespace PasswordGeneratorTelegramProxy.Models
 
         public void Delete(long key)
         {
-            DictionaryItem<HubConnection> forRemove;
+            DictionaryItem<Tuple<HubConnection, IHubProxy>> forRemove;
             _internalMap.TryRemove(key, out forRemove);
         }
 
-        public bool TryGet(long key, out HubConnection connection)
+        public bool TryGet(long key, out HubConnection connection, out IHubProxy proxy)
         {
-            DictionaryItem<HubConnection> dictItem;
+            DictionaryItem<Tuple<HubConnection, IHubProxy>> dictItem;
             bool result = _internalMap.TryGetValue(key, out dictItem);
 
             if (result)
             {
-                connection = dictItem.Value;
+                connection = dictItem.Value.Item1;
+                proxy = dictItem.Value.Item2;
 
-                var updatedDictItem = (DictionaryItem<HubConnection>)dictItem.Clone();
+                var updatedDictItem = (DictionaryItem<Tuple<HubConnection, IHubProxy>>)dictItem.Clone();
                 updatedDictItem.LastChange = _timeManager.Now;
 
                 _internalMap.TryUpdate(
@@ -71,6 +73,7 @@ namespace PasswordGeneratorTelegramProxy.Models
             else
             {
                 connection = null;
+                proxy = null;
             }
 
             return result;
@@ -82,7 +85,7 @@ namespace PasswordGeneratorTelegramProxy.Models
             {
                 if (pair.Value.IsObsolet())
                 {
-                    DictionaryItem<HubConnection> removed;
+                    DictionaryItem<Tuple<HubConnection, IHubProxy>> removed;
                     _internalMap.TryRemove(pair.Key, out removed);                    
                 }
             }
@@ -99,7 +102,7 @@ namespace PasswordGeneratorTelegramProxy.Models
 
             for (int i=0; i<=removeCount; i++)
             {
-                DictionaryItem<HubConnection> removed;
+                DictionaryItem<Tuple<HubConnection, IHubProxy>> removed;
                 _internalMap.TryRemove(sorted[i].Key, out removed);
             }
         }
