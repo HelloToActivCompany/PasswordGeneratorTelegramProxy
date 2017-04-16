@@ -15,8 +15,10 @@ namespace PasswordGeneratorTelegramProxy
 
             routes.MapRoute(
                 name: "Default",
-                url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+                url: "api/{controller}",
+                defaults: new {controller = "Telegram"}
+                //url: "api/{controller}/{action}",
+                //defaults: new { controller = "Telegram", action = "Heartbeat"}
             );
         }
     }

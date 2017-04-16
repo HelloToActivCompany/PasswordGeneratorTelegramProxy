@@ -34,8 +34,6 @@ namespace PasswordGeneratorTelegramProxy.Utils
             builder.RegisterType<WebConfigPasswordGeneratorHubNameManager>().As<IGetPasswordGeneratorHubName>().SingleInstance();
             builder.RegisterType<HubConnectionFactory>().As<IHubConnectionFactory>();
 
-            builder.RegisterType<PasswordGeneratorHubProxyFactory>().As<IHubProxyFactory>().SingleInstance();
-
             builder.Register(c => new TelegramController(
                 c.Resolve<ITelegramBotClientFactory>(), 
                 c.Resolve<IHubConnectionFactory>(),

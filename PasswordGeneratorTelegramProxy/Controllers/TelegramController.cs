@@ -4,7 +4,6 @@ using Telegram.Bot.Types;
 using Newtonsoft.Json;
 using System.Web.Http.Results;
 using Microsoft.AspNet.SignalR.Client;
-using Microsoft.AspNet.SignalR.Client.Hubs;
 using PasswordGeneratorTelegramProxy.Models;
 using PasswordGeneratorTelegramProxy.Models.Configuration;
 using Microsoft.AspNet.SignalR.Client.Transports;
@@ -86,9 +85,9 @@ namespace PasswordGeneratorTelegramProxy.Controllers
         }
 
         [HttpGet]
-        public OkResult Heartbeat()
+        public IHttpActionResult Heartbeat()
         {
-            return Ok();
+            return Ok("pulse");
         }
     }
 }
