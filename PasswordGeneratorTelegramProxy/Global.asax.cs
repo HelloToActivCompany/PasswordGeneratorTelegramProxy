@@ -2,7 +2,7 @@
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
-using PasswordGeneratorTelegramProxy.Utils;
+using PasswordGeneratorTelegramProxy.Models;
 
 namespace PasswordGeneratorTelegramProxy
 {
@@ -10,7 +10,7 @@ namespace PasswordGeneratorTelegramProxy
     {
         protected void Application_Start()
         {
-            AutofacConfig.ConfigureContainer();
+            CompositionRoot.ConfigureContainer();
 
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);

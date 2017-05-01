@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PasswordGeneratorTelegramProxy.Models.Configuration
+namespace PasswordGeneratorTelegramProxy.Models
 {
-    public interface IGetBotToken
+    public interface IElapsed
     {
-        string GetToken();
+        event EventHandler Elapsed;  
     }
 }

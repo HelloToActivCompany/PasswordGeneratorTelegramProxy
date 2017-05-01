@@ -10,10 +10,10 @@ namespace PasswordGeneratorTelegramProxy.Models.Configuration
     {
         private string _url;
 
-        public HubConnectionFactory(IGetPasswordGeneratorUrl passwordGeneratorUrlManager)
+        public HubConnectionFactory(string url)
         {
-            _url = passwordGeneratorUrlManager.GetUrl();
-        }
+			_url = url;
+		}
 
         public HubConnection CreateHubConnection(string url)
         {
